@@ -4,6 +4,6 @@
 	"corsHeaders": ["Link"],
 	"GCLOUD_PROJECT": "crawling-domain",
 	"DATA_BACKEND": "datastore",
-	"baseurl": "http://0.0.0.0:3000/api/",
-	"baseurlexter": "https://cw-global-api-dot-crawling-domain.appspot.com/api/"
+	"baseurlinter": "http://0.0.0.0:3000/api/",
+	"baseurl": "https://cw-global-api-dot-crawling-domain.appspot.com/api/"
 }
