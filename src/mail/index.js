@@ -1,35 +1,86 @@
-const nodemailer = require('nodemailer');
+var schedule = require('node-schedule');
+var moment = require('moment');
+var async = require("async");
+var modulevar = require('../variables');
+var request = require('request');
+import config from '../config.json';
+const SENDGRID_API_KEY = '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';
+const SENDGRID_SENDER = 'Twice Pixels';
+const Sendgrid = require('sendgrid')(SENDGRID_API_KEY);
 
-export default ({ domainxusers }) => {
-    console.log(domainxusers)
-    /*
-    //Obtener información de usuario, dominio que se busco, y palabras y urls encontradas
-    let transporter = nodemailer.createTransport({
-        host: 'smtp-mail.outlook.com',
-        port: 587,
-        secure: false, // secure:true for port 465, secure:false for port 587
-        auth: {
-            user: 'fdotorresiles@outlook.com',
-            pass: 'religion=6328'
-        }
-    });
+module.exports = class mail {
+    constructor() {}
 
-    // setup email data with unicode symbols
-    let mailOptions = {
-        from: 'fdotorresiles@outlook.com', // sender address
-        to: 'ltorres@impesa.net', // list of receivers
-        subject: 'Notificaciones', // Subject line
-        text: 'Hello world ?', // plain text body
-        html: '<b>Hello world ?</b>' // html body
-    };
+    start(itemWord){
+        var date = moment(itemWord.periodicity);
+        date.add(2, 'minutes');
+        var rule = new schedule.RecurrenceRule();
+        rule.hour = date.hour();
+        rule.minute = date.minutes(); //aumentar 2 minutos
 
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return console.log(error);
-        }
-        console.log('Message %s sent: %s', info.messageId, info.response);
-    });
-    */
+        console.log(rule.minute);
+        var th = schedule.scheduleJob({ rule }, function(itemWord){
+            console.log("Hilo de correo para el id:", itemWord.id);
+            request.get( config.baseurl + 'Notifications?filter[where][userxdomainId]='+itemWord.id, function(err, response, body) {
+                if (!err && response.statusCode == 200) {
+                    var notificaciones = JSON.parse(body);
+                    var message = "";
+
+                    notificaciones.forEach(function(element) {
+                        message += element.urlresult + "\n";
+                        
+                    }, this);
+
+                    const sgReq = Sendgrid.emptyRequest({
+                        method: 'POST',
+                        path: '/v3/mail/send',
+                        body: {
+                          personalizations: [{
+                            to: [{ email: 'ltorres@impesa.net' }],
+                            subject: 'Notificaciones'
+                          }],
+                          from: { email: SENDGRID_SENDER },
+                          content: [{
+                            type: 'text/plain',
+                            value: message
+                          }]
+                        }
+                      });
+                    
+                      Sendgrid.API(sgReq, (err) => {
+                        if (err) {
+                          //next(err);
+                          return;
+                        }
+
+                        notificaciones.forEach(function(element) {
+                            element.notify = true;
+
+                            var options = {
+                                method: 'post',
+                                body: element,
+                                json: true,
+                                url: config.baseurl + 'Notifications/'+element.id
+                            }
+
+                            request(options, function (err, res, body) {
+                                if (err) {
+                                    console.log(err)
+                                    return
+                                }
+                            });
+                            
+                        }, this);
+
+                        // Render the index route on success
+                      });
+
+                }
+                
+
+                
+            });
+        }.bind(null, itemWord));
+        //Programar tarea
+    }
 }
-

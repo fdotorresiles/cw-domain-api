@@ -1,9 +1,10 @@
 {
+	"tiempoGlobalThread": "*/5 * * * * *",
 	"port": 8080,
 	"bodyLimit": "100kb",
 	"corsHeaders": ["Link"],
 	"GCLOUD_PROJECT": "crawling-domain",
 	"DATA_BACKEND": "datastore",
-	"baseurlinter": "http://0.0.0.0:3000/api/",
-	"baseurl": "https://cw-global-api-dot-crawling-domain.appspot.com/api/"
+	"baseurl": "http://0.0.0.0:3000/api/",
+	"baseurlopen": "https://cw-global-api-dot-crawling-domain.appspot.com/api/"
 }
